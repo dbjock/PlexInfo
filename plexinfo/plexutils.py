@@ -20,7 +20,7 @@ def connectPlexServer(plexAcct, svrName):
     return plexConnect
 
 
-def dump_movieTypeLibAtt(movieLib):
+def dump_movieLibAtt(movieLib):
     """Print attributes of the movie Library Type"""
     print(f"  Library Title: {movieLib.title}")
     print(f"  Settings:  {movieLib.settings()}")
