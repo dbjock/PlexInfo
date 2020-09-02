@@ -55,3 +55,4 @@ venv.bak/
 #My PlexInfo stuff.
 *.conf
 *.log
+*.ini
