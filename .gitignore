@@ -56,3 +56,4 @@ venv.bak/
 *.conf
 *.log
 *.ini
+testme.py
