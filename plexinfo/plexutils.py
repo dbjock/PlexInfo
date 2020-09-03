@@ -2,6 +2,8 @@ import sys
 import logging
 import traceback
 
+logger = logging.getLogger("PlexUtils")
+
 
 def connectPlexServer(plexAcct, svrName):
     """Will connect to the server
@@ -9,14 +11,14 @@ def connectPlexServer(plexAcct, svrName):
     svrName  : Plex server name
 
     Returns : Plex server connection object"""
-    print(f"Connecting to server: {svrName}")
+    logger.debug(f"connecting to svrName: {svrName}")
     try:
         plexConnect = plexAcct.resource(svrName).connect()
-    except:
-        print("Connection FAILED")
-        print(traceback.format_exc())
+    except Exception as err:
+        logger.critical(f"Error:  {err}", exc_info=True)
         sys.exit(1)
 
+    logger.debug(f"successfully connected to svrName: {svrName}")
     return plexConnect
 
 
