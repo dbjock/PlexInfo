@@ -2,6 +2,7 @@ import sys
 import logging
 import traceback
 import csv
+from pathlib import Path
 
 logger = logging.getLogger("PlexUtils")
 
@@ -37,17 +38,15 @@ def dump_movieLibAtt(movieLib):
 
 def csvExportMovie(movieLib, outFile, maxItems=0):
     """Export movie library items to csv file
-    PARMS:
-    movieLib   : some type of class
-    outFile    : csv output file
-    maxItems  : (optional) max records to save
 
-    Returns the number of items written
+    Args:
+        movieLib (plexapi.library.MovieSection): The movie section to extract
+        outFile ([string]): output file for the data
+        maxItems (int, optional): max records to write. Defaults to 0.
     """
-
     # Columns layout.
     colHdr = ['LibName', 'guid', 'Title', 'TitleSort',
-              'OrigTitle', 'Year', 'Location', 'Genres', 'Media']
+              'OrigTitle', 'Year', 'Location', 'uFilePath', 'Genres', 'Media']
 
     # Get all media from the movie library
     logger.info(f"Getting all movies from the {movieLib.title}")
@@ -70,6 +69,7 @@ def csvExportMovie(movieLib, outFile, maxItems=0):
             mRow['OrigTitle'] = m.originalTitle
             mRow['Year'] = m.year
             mRow['Location'] = m.locations
+            mRow['uFilePath'] = _uFilePath(m.locations[0])
             mRow['Genres'] = m.genres
             mRow['Media'] = m.media
             csvWrite.writerow(mRow)
@@ -79,6 +79,27 @@ def csvExportMovie(movieLib, outFile, maxItems=0):
 
     logger.info(f"Wrote {itemCount} items from {movieLib.title}")
     print(f"Wrote {itemCount} items from {movieLib.title}")
+
+
+def _uFilePath(plexLoc):
+    """Provides universal path and filename (no drive)
+
+    Args:
+        plexLoc (string): file path and name (plex location)
+
+    Returns:
+        string: full file path and name
+        example: /dir/dirA/dirB/my file name.mkv
+    """
+    p_theLoc = Path(plexLoc)
+    if p_theLoc.drive:
+        offset = 1  # windows path
+    else:
+        offset = 2  # non windows path
+    uPath = ""
+    for x in range(offset, len(p_theLoc.parts)):
+        uPath = uPath + f"/{p_theLoc.parts[x]}"
+    return uPath
 
 
 if __name__ == '__main__':

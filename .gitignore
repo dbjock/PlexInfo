@@ -58,4 +58,4 @@ venv.bak/
 *.ini
 *.csv
 *.db
-testme.py
+test*.py
