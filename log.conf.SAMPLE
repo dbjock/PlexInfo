@@ -1,0 +1,39 @@
+version: 1
+
+root:
+  level: DEBUG
+  handlers: [console]
+
+loggers:
+  PlexReport:
+    level: DEBUG
+    handlers: [file_handler]
+  PlexUtils:
+    level: DEBUG
+    handlers: [file_handler]
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: WARNING
+    formatter: simple
+
+  ether:
+   class: logging.NullHandler
+   level: NOTSET
+   formatter: simple
+
+  file_handler:
+      class: logging.handlers.RotatingFileHandler
+      level: DEBUG
+      formatter: extended
+      filename: ./logs/default.log
+      mode: a+
+      maxBytes: 131072 #128K
+      backupCount: 2
+
+formatters:
+  simple:
+    format: "%(asctime)s %(message)s"
+  extended:
+    format: "%(asctime)s %(levelname)s [%(name)s-func:%(funcName)s] - %(message)s"
