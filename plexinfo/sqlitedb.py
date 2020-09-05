@@ -1,6 +1,7 @@
 import sys
 import logging
 import sqlite3
+import hashlib
 from pathlib import Path
 
 logger = logging.getLogger("sqlitedb")
@@ -50,13 +51,13 @@ class LocalDB():
         try:
             c = self.conn.cursor()
             c.executescript(script)
-        except:
+        except Exception as e:
             logger.critical(
-                f"Unexpected Error running script: {scriptFileName}", exc_info=True)
+                f"Unexpected Error running script: {scriptFileName}. Exception {e}", exc_info=True)
             sys.exit(1)
 
         self.conn.commit()
-        logger.debug(f"script: {scriptFileName} commited")
+        logger.debug(f"script: {scriptFileName} commited successfully")
 
     def _exeSQLInsert(self, sql, theVals):
         """Submit insert type sql. (internal use only)
@@ -83,9 +84,9 @@ class LocalDB():
         except sqlite3.IntegrityError as e:
             logger.warning(f"sqlite integrity error: {e.args[0]}")
             return [2, f"sqlite integrity error: {e.args[0]}"]
-        except:
+        except Exception as e:
             logger.critical(
-                f"Unexpected error executing sql: {sql}", exc_info=True)
+                f"Unexpected error executing sql: {sql}. Values are {theVals} Exception: {e}", exc_info=True)
             sys.exit(1)
 
         logger.debug("successful commit of sql")
@@ -105,9 +106,60 @@ class LocalDB():
         logger.debug(f"Executing {scriptFile}")
         self._exeScriptFile(scriptFileName=f'{scriptFile}')
 
+    def addSourceRec(self, srcRec):
+        """Add a record to the source table
 
-class srcRec():
+        Args:
+            srcRec ([class srcRec]): Source record to add
+
+        Returns:
+            [int]: The primary key id for the added source record
+        """
+        sql = "INSERT INTO t_srckeys (server, library, filePath, skey, uKey) VALUES (:server, :libName, :uFilePath, :sKey, :uKey)"
+        theVals = {'server': srcRec.svrName,
+                   'libName': srcRec.libName, 'uFilePath': srcRec.uFilePath, 'sKey': srcRec.sKey, 'uKey': srcRec.uKey}
+        r = self._exeSQLInsert(sql, theVals)
+
+        # Getting the rowID for the record just added.
+        try:
+            c = self.conn.cursor()
+            c.execute("select last_insert_rowid()")
+            row = c.fetchone()
+        except Exception as e:
+            logger.critical(
+                f"Unexpected error executing sql: {sql}. Exception: {e}", exc_info=True)
+            sys.exit(1)
+        # Write to log ever 15 records
+        if row[0] % 15 == 0:
+            logger.info(f"records written {row[0]}")
+
+        return row[0]
+
+    def addKeyValRec(self, keyRec):
+        sql = "INSERT INTO t_keyvals (srcKey_id, s_value) VALUES (:srcKey, :sValue)"
+        theVals = {'srcKey': keyRec.srckey_id, 'sValue': keyRec.sValue}
+        return self._exeSQLInsert(sql, theVals)
+
+
+class srcKey():
     def __init__(self):
-        self.server = ""
-        self.library = ""
-        self.fileobj = ""
+        self.svrName = ""
+        self.libName = ""
+        self.uFilePath = ""
+        self.sKey = ""
+
+    @property
+    def uKey(self):
+        # This is the unique key which can be used
+        # to join to the srcKey table (grouped) to find differences
+        str2hash = self.libName + self.uFilePath + self.sKey
+        return hashlib.md5(str2hash.encode()).hexdigest()
+
+
+class keyVal():
+    def __init__(self):
+        self.srckey_id = ""
+        self.sValue = ""
+
+    def __repr__(self):
+        return f"srckey_id={self.srckey_id}, s_key={self.s_key}, s_value={self.s_value}"

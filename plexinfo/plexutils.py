@@ -3,6 +3,7 @@ import logging
 import traceback
 import csv
 from pathlib import Path
+from plexinfo import sqlitedb as mydb
 
 logger = logging.getLogger("PlexUtils")
 
@@ -40,7 +41,7 @@ def csvExportMovie(movieLib, outFile, maxItems=0):
     """Export movie library items to csv file
 
     Args:
-        movieLib (plexapi.library.MovieSection): The movie section to extract
+        movieLib (plexapi.library.MovieSection): The movie section to export
         outFile ([string]): output file for the data
         maxItems (int, optional): max records to write. Defaults to 0.
     """
@@ -100,6 +101,72 @@ def _uFilePath(plexLoc):
     for x in range(offset, len(p_theLoc.parts)):
         uPath = uPath + f"/{p_theLoc.parts[x]}"
     return uPath
+
+
+def _movie2Rec(dbObj, svrName, uFilePath, libName, sKey, keyVal):
+    srcR = mydb.srcKey()
+    srcR.svrName = svrName
+    srcR.uFilePath = uFilePath
+    srcR.libName = libName
+    srcR.sKey = sKey
+
+    valR = mydb.keyVal()
+    valR.sValue = keyVal
+    valR.srckey_id = dbObj.addSourceRec(srcR)
+    dbObj.addKeyValRec(valR)
+
+
+def movieLib2Db(dbObj, movieLib, svrName, maxItems=0):
+    """Export movie library items into database
+
+    Args:
+        dbobj (mydb.LocalDB object): database object to update
+        movieLib (plexapi.library.MovieSection): Movie lib section to export
+        svrName (string): Name of the plex server
+        maxItems (int, optional): max records to write. Defaults to 0.
+    """
+    # Get all media from the movie library
+    logger.info(f"Getting all movies from the {movieLib.title}")
+    mList = movieLib.all()
+    itemCount = 0
+    if maxItems > 0:
+        logger.warning(f"Max items that will be returned: {maxItems}")
+
+    logger.debug("updating database")
+    for m in mList:
+        itemCount += 1
+        # The Key part of the key/value pair
+        _movie2Rec(dbObj, svrName=svrName, uFilePath=_uFilePath(
+            m.locations[0]), libName=movieLib.title, sKey="guid", keyVal=str(m.guid))
+        # ##############################
+        _movie2Rec(dbObj, svrName=svrName, uFilePath=_uFilePath(
+            m.locations[0]), libName=movieLib.title, sKey="Title", keyVal=m.title)
+        # ##############################
+        _movie2Rec(dbObj, svrName=svrName, uFilePath=_uFilePath(
+            m.locations[0]), libName=movieLib.title, sKey="TitleSort", keyVal=m.titleSort)
+        # ###############################
+        _movie2Rec(dbObj, svrName=svrName, uFilePath=_uFilePath(
+            m.locations[0]), libName=movieLib.title, sKey="OrigTitle", keyVal=m.originalTitle)
+        # ###############################
+        _movie2Rec(dbObj, svrName=svrName, uFilePath=_uFilePath(
+            m.locations[0]), libName=movieLib.title, sKey="Year", keyVal=m.year)
+        # ###############################
+        _movie2Rec(dbObj, svrName=svrName, uFilePath=_uFilePath(
+            m.locations[0]), libName=movieLib.title, sKey="Location", keyVal=str(m.locations))
+        # ###############################
+        _movie2Rec(dbObj, svrName=svrName, uFilePath=_uFilePath(
+            m.locations[0]), libName=movieLib.title, sKey="Genres", keyVal=str(m.genres))
+        # ###############################
+        _movie2Rec(dbObj, svrName=svrName, uFilePath=_uFilePath(
+            m.locations[0]), libName=movieLib.title, sKey="Media", keyVal=str(m.media))
+
+        if itemCount % 10 == 0:
+            logging.info(f"Items exported to db: {itemCount}")
+
+        if itemCount == maxItems:
+            break
+
+    logger.debug("database update done")
 
 
 if __name__ == '__main__':

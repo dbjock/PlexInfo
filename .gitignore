@@ -53,8 +53,8 @@ env.bak/
 venv.bak/
 
 #My PlexInfo stuff.
+logs/
 *.conf
-*.log
 *.ini
 *.csv
 *.db

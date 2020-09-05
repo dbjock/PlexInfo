@@ -2,9 +2,12 @@ import sys
 import getpass
 import logging.config
 import yaml
+from pathlib import Path
+
 # app specific modules
+from plexinfo import sqlitedb as mydb
+from plexinfo import plexutils as myutil
 from plexapi.myplex import MyPlexAccount
-import plexinfo.plexutils as myutil
 
 logger = logging.getLogger("PlexReport")
 
@@ -14,7 +17,7 @@ with open("log.conf", 'rt') as f:
 logging.config.dictConfig(config)
 
 
-if __name__ == '__main__':
+def main():
     userName = "dbjock"
     #####################
     # Simple command line parse
@@ -23,6 +26,8 @@ if __name__ == '__main__':
         sys.exit(1)
 
     svrName = sys.argv[1]
+    plexRptData = Path.cwd() / 'Data'
+    plexScripts = Path.cwd() / 'Scripts'
 
     logger.debug(f"getpass from user {userName}")
     userPass = getpass.getpass(prompt=f"Enter {userName}'s Plex Password: ")
@@ -34,6 +39,10 @@ if __name__ == '__main__':
         logger.critical(f"Error:  {err}", exc_info=True)
         sys.exit()
 
-    logger.debug(f"username: {userName} authenticated to svrName: {svrName}")
+    logger.debug(f"username: {userName} authenticated.")
     print("Authenticated")
     print("That is all I can do at this time")
+
+
+if __name__ == '__main__':
+    main()
