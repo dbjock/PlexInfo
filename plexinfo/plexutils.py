@@ -71,7 +71,10 @@ def csvExportMovie(movieLib, outFile, maxItems=0):
             mRow['Year'] = m.year
             mRow['Location'] = m.locations
             mRow['uFilePath'] = _uFilePath(m.locations[0])
+
             mRow['Genres'] = m.genres
+            testme = _genreStr(m.genres)
+
             mRow['Media'] = m.media
             csvWrite.writerow(mRow)
 
@@ -101,6 +104,15 @@ def _uFilePath(plexLoc):
     for x in range(offset, len(p_theLoc.parts)):
         uPath = uPath + f"/{p_theLoc.parts[x]}"
     return uPath
+
+
+def _genreStr(genreList):
+    tmpLst = []
+    for i in genreList:
+        tmpLst.append(i.tag)
+
+    tmpLst.sort()
+    return tmpLst
 
 
 def _movie2Rec(dbObj, svrName, uFilePath, libName, sKey, keyVal):
@@ -155,7 +167,7 @@ def movieLib2Db(dbObj, movieLib, svrName, maxItems=0):
             m.locations[0]), libName=movieLib.title, sKey="Location", keyVal=str(m.locations))
         # ###############################
         _movie2Rec(dbObj, svrName=svrName, uFilePath=_uFilePath(
-            m.locations[0]), libName=movieLib.title, sKey="Genres", keyVal=str(m.genres))
+            m.locations[0]), libName=movieLib.title, sKey="Genres", keyVal=str(_genreStr(m.genres)))
         # ###############################
         _movie2Rec(dbObj, svrName=svrName, uFilePath=_uFilePath(
             m.locations[0]), libName=movieLib.title, sKey="Media", keyVal=str(m.media))
