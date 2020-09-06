@@ -109,7 +109,7 @@ class LocalDB():
         self._exeScriptFile(scriptFileName=f'{scriptFile}')
 
     def addLibKeyRec(self, srcRec):
-        """Add a record to the source table
+        """Add a record to the Library Key table
 
         Args:
             srcRec ([class srcRec]): Source record to add
@@ -131,9 +131,6 @@ class LocalDB():
             logger.critical(
                 f"Unexpected error executing sql: {sql}. Exception: {e}", exc_info=True)
             sys.exit(1)
-        # Write to log ever 15 records
-        if row[0] % 15 == 0:
-            logger.info(f"Total library keys written {row[0]}")
 
         return row[0]
 

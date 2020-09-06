@@ -121,7 +121,9 @@ def _movie2Rec(dbObj, svrName, uFilePath, libName, sKey, keyVal):
 
     valR = mydb.LibKeyVal()
     valR.sValue = keyVal
+    logger.debug(f"write to lib key table, and get rowID")
     valR.srckey_id = dbObj.addLibKeyRec(srcR)
+    logger.debug(f"rowID : {valR.srckey_id}")
     dbObj.addLibValRec(valR)
 
 
@@ -135,11 +137,11 @@ def movieLib2Db(dbObj, movieLib, svrName, maxItems=0):
         maxItems (int, optional): max records to write. Defaults to 0.
     """
     # Get all media from the movie library
-    logger.info(f"Getting all movies from the {movieLib.title}")
+    logger.info(f"Getting all movies from the movie library: {movieLib.title}")
     mList = movieLib.all()
     itemCount = 0
     if maxItems > 0:
-        logger.warning(f"Max items that will be returned: {maxItems}")
+        logger.warning(f"Max Movies allowed to be exported: {maxItems}")
 
     logger.debug("updating database")
     for m in mList:
@@ -169,8 +171,8 @@ def movieLib2Db(dbObj, movieLib, svrName, maxItems=0):
         _movie2Rec(dbObj, svrName=svrName, uFilePath=_uFilePath(
             m.locations[0]), libName=movieLib.title, sKey="Media", keyVal=str(m.media))
 
-        if itemCount % 10 == 0:
-            logging.info(f"Items exported to db: {itemCount}")
+        if itemCount % 20 == 0:
+            logging.info(f"Movies exported to db: {itemCount}")
 
         if itemCount == maxItems:
             break
