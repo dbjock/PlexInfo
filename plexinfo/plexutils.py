@@ -71,10 +71,7 @@ def csvExportMovie(movieLib, outFile, maxItems=0):
             mRow['Year'] = m.year
             mRow['Location'] = m.locations
             mRow['uFilePath'] = _uFilePath(m.locations[0])
-
-            mRow['Genres'] = m.genres
-            testme = _genreStr(m.genres)
-
+            mRow['Genres'] = _genreStr(m.genres)
             mRow['Media'] = m.media
             csvWrite.writerow(mRow)
 
