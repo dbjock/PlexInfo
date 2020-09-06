@@ -106,7 +106,7 @@ class LocalDB():
         logger.debug(f"Executing {scriptFile}")
         self._exeScriptFile(scriptFileName=f'{scriptFile}')
 
-    def addSourceRec(self, srcRec):
+    def addLibKeyRec(self, srcRec):
         """Add a record to the source table
 
         Args:
@@ -115,7 +115,7 @@ class LocalDB():
         Returns:
             [int]: The primary key id for the added source record
         """
-        sql = "INSERT INTO t_srckeys (server, library, filePath, skey, uKey) VALUES (:server, :libName, :uFilePath, :sKey, :uKey)"
+        sql = "INSERT INTO t_libkeys (server, library, filePath, skey, uKey) VALUES (:server, :libName, :uFilePath, :sKey, :uKey)"
         theVals = {'server': srcRec.svrName,
                    'libName': srcRec.libName, 'uFilePath': srcRec.uFilePath, 'sKey': srcRec.sKey, 'uKey': srcRec.uKey}
         r = self._exeSQLInsert(sql, theVals)
@@ -135,13 +135,13 @@ class LocalDB():
 
         return row[0]
 
-    def addKeyValRec(self, keyRec):
-        sql = "INSERT INTO t_keyvals (srcKey_id, s_value) VALUES (:srcKey, :sValue)"
+    def addLibValRec(self, keyRec):
+        sql = "INSERT INTO t_libvals (srcKey_id, s_value) VALUES (:srcKey, :sValue)"
         theVals = {'srcKey': keyRec.srckey_id, 'sValue': keyRec.sValue}
         return self._exeSQLInsert(sql, theVals)
 
 
-class srcKey():
+class LibSrcKey():
     def __init__(self):
         self.svrName = ""
         self.libName = ""
@@ -150,16 +150,19 @@ class srcKey():
 
     @property
     def uKey(self):
-        # This is the unique key which can be used
-        # to join to the srcKey table (grouped) to find differences
+        # Returns unique key created by
+        # returning md5 hexdigest of the combined:
+        #  - Library Name (libname)
+        #  - Universal File Path (uFilePath)
+        #  - Key (sKey)
         str2hash = self.libName + self.uFilePath + self.sKey
         return hashlib.md5(str2hash.encode()).hexdigest()
 
 
-class keyVal():
+class LibKeyVal():
     def __init__(self):
         self.srckey_id = ""
         self.sValue = ""
 
     def __repr__(self):
-        return f"srckey_id={self.srckey_id}, s_key={self.s_key}, s_value={self.s_value}"
+        return f"srckey_id={self.srckey_id}, svalue={self.sValue}"

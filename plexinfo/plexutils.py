@@ -113,16 +113,16 @@ def _genreStr(genreList):
 
 
 def _movie2Rec(dbObj, svrName, uFilePath, libName, sKey, keyVal):
-    srcR = mydb.srcKey()
+    srcR = mydb.LibSrcKey()
     srcR.svrName = svrName
     srcR.uFilePath = uFilePath
     srcR.libName = libName
     srcR.sKey = sKey
 
-    valR = mydb.keyVal()
+    valR = mydb.LibKeyVal()
     valR.sValue = keyVal
-    valR.srckey_id = dbObj.addSourceRec(srcR)
-    dbObj.addKeyValRec(valR)
+    valR.srckey_id = dbObj.addLibKeyRec(srcR)
+    dbObj.addLibValRec(valR)
 
 
 def movieLib2Db(dbObj, movieLib, svrName, maxItems=0):
