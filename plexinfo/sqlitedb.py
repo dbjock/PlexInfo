@@ -2,7 +2,9 @@ import sys
 import logging
 import sqlite3
 import hashlib
+import csv
 from pathlib import Path
+
 
 logger = logging.getLogger("sqlitedb")
 
@@ -19,7 +21,6 @@ class LocalDB():
         try:
             self.conn = sqlite3.connect(
                 dbLoc, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
-            # self.cursor = self.conn.cursor()
         except sqlite3.Error as errID:
             logger.critical(
                 f"Database connection failure. ", exc_info=True)
@@ -31,6 +32,7 @@ class LocalDB():
         logger.debug(f"successful connection to {dbLoc}")
 
         c = self.conn.cursor()
+        c.execute("PRAGMA foreign_keys = ON")
         c.execute("PRAGMA database_list;")
         xtmp = c.fetchall()
         logger.debug(f"PRAGMA database_list: {xtmp}")
@@ -131,7 +133,7 @@ class LocalDB():
             sys.exit(1)
         # Write to log ever 15 records
         if row[0] % 15 == 0:
-            logger.info(f"records written {row[0]}")
+            logger.info(f"Total library keys written {row[0]}")
 
         return row[0]
 
@@ -139,6 +141,32 @@ class LocalDB():
         sql = "INSERT INTO t_libvals (srcKey_id, s_value) VALUES (:srcKey, :sValue)"
         theVals = {'srcKey': keyRec.srckey_id, 'sValue': keyRec.sValue}
         return self._exeSQLInsert(sql, theVals)
+
+    def exportLibDiff(self, oFile):
+        """Export the Library diff query to a csv file
+
+        Args:
+            oFile (string): File name for the csv file
+        """
+        logger.debug(f"oFile={oFile}")
+
+        sql = "SELECT library, filePath, skey, server1_val, server2_val, isDiff FROM v_lib_DiffResults"
+
+        try:
+            logger.debug(f"executing sql: {sql}")
+            localc = self.conn.cursor()
+            localc.execute(sql)
+
+        except Exception as e:
+            logger.critical(
+                f"Unexpected error executing sql: {sql}. Values are {theVals} Exception: {e}", exc_info=True)
+            sys.exit(1)
+
+        logger.debug(f"Writting sql results to:  {oFile}")
+        with open(oFile, "w", newline='') as csv_file:
+            csv_writer = csv.writer(csv_file, dialect='excel')
+            csv_writer.writerow([i[0] for i in localc.description])
+            csv_writer.writerows(localc)
 
 
 class LibSrcKey():
