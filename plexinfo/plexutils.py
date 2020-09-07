@@ -112,7 +112,23 @@ def _genreStr(genreList):
     return tmpLst
 
 
+def _collection2Rec(dbObj, colKey, colVal):
+    """Add collection records to database
+
+    Args:
+        dbObj (class sqlitedb.LocalDB): Database obj to be updated
+        colKey (class sqlitedb.ColKey): The Collection Key record object
+        colVal (class sqlitedb.ColKeVal): The value of the Collect key
+    """
+    # Saving the key
+    logger.debug(f"writing to database collection key: {colKey.sKey}")
+    colVal.srckey_id = dbObj.addColKeyRec(colKey)
+    logger.debug(f"writing to database collection key value: {colVal.sValue}")
+    dbObj.addColValRec(colVal)
+
+
 def _movie2Rec(dbObj, svrName, uFilePath, libName, sKey, keyVal):
+    "TODO: Why all the values for mydb.LibSrcKey? Just sent over mydb.LibSrcKey"
     srcR = mydb.LibSrcKey()
     srcR.svrName = svrName
     srcR.uFilePath = uFilePath
@@ -131,7 +147,7 @@ def movieLib2Db(dbObj, movieLib, svrName, maxItems=0):
     """Export movie library items into database
 
     Args:
-        dbobj (mydb.LocalDB object): database object to update
+        dbObj (sqlitedb.LocalDB object): database object to update
         movieLib (plexapi.library.MovieSection): Movie lib section to export
         svrName (string): Name of the plex server
         maxItems (int, optional): max records to write. Defaults to 0.
@@ -178,6 +194,40 @@ def movieLib2Db(dbObj, movieLib, svrName, maxItems=0):
             break
 
     logger.debug("database update done")
+
+
+def collection2Db(dbObj, movieLib, dbSvrNameTag, maxItems=0):
+    pass
+    mCollections = movieLib.collection()
+    # Iterate thru collections (mCollections) in the Movie Library
+    itemCount = 1
+    for c in mCollections:
+        c_keyRec = mydb.ColKey()
+        c_valRec = mydb.ColKeyVal()
+
+        c_keyRec.svrName = dbSvrNameTag
+        c_keyRec.libName = movieLib.title
+        c_keyRec.colName = c.title
+
+        c_keyRec.sKey = "collectionMode"
+        c_valRec.sValue = c.collectionMode
+        _collection2Rec(dbObj, c_keyRec, c_valRec)
+
+        c_keyRec.sKey = "collectionSort"
+        c_valRec.sValue = c.collectionSort
+        _collection2Rec(dbObj, c_keyRec, c_valRec)
+
+        childNum = 1
+        for c_child in c.children:
+            c_keyRec.sKey = f"CHILD-{childNum}"
+            c_valRec.sValue = c_child.title
+            _collection2Rec(dbObj, c_keyRec, c_valRec)
+            childNum += 1
+
+        if itemCount == maxItems:
+            break
+
+        itemCount += 1
 
 
 if __name__ == '__main__':

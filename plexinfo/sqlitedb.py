@@ -5,7 +5,6 @@ import hashlib
 import csv
 from pathlib import Path
 
-
 logger = logging.getLogger("sqlitedb")
 
 
@@ -165,6 +164,42 @@ class LocalDB():
             csv_writer.writerow([i[0] for i in localc.description])
             csv_writer.writerows(localc)
 
+    def addColKeyRec(self, keyRec):
+        """Add a record to the Collection keys table
+
+        Args:
+            keyRec (Class ColKey): Collection Key's object with values to write
+
+        Returns:
+            [int]: The primary key id for the added key record
+        """
+        pass
+        sql = "INSERT INTO t_colkeys (svrName, libName, colName, sKey, uKey) VALUES (:svrName, :libName, :colName, :sKey, :uKey)"
+        theVals = {'svrName': keyRec.svrName, 'libName': keyRec.libName,
+                   'colName': keyRec.colName, "sKey": keyRec.sKey, "uKey": keyRec.uKey}
+
+        logger.debug(f"adding collection key record : {theVals}, ")
+        r = self._exeSQLInsert(sql, theVals)
+        # Getting the rowID for the record just added.
+        try:
+            xcursor = self.conn.cursor()
+            xcursor.execute("select last_insert_rowid()")
+            row = xcursor.fetchone()
+        except Exception as e:
+            logger.critical(
+                f"Unexpected error executing sql: {sql}. Exception: {e}", exc_info=True)
+            sys.exit(1)
+
+        return row[0]
+
+    def addColValRec(self, valRec):
+        sql = "INSERT INTO t_colvals (colkey_id, s_value) VALUES (:ColKey, :sValue)"
+        theVals = {'ColKey': valRec.srckey_id, 'sValue': valRec.sValue}
+
+        logger.debug(f"adding collection value record {valRec.srckey_id}")
+
+        return self._exeSQLInsert(sql, theVals)
+
 
 class LibSrcKey():
     def __init__(self):
@@ -185,6 +220,33 @@ class LibSrcKey():
 
 
 class LibKeyVal():
+    def __init__(self):
+        self.srckey_id = ""
+        self.sValue = ""
+
+    def __repr__(self):
+        return f"srckey_id={self.srckey_id}, svalue={self.sValue}"
+
+
+class ColKey():
+    def __init__(self):
+        self.svrName = ""
+        self.libName = ""
+        self.colName = ""
+        self.sKey = ""
+
+    @property
+    def uKey(self):
+        # Returns unique key created by
+        # returning md5 hexdigest of the combined:
+        #  - Library Name (libname)
+        #  - Collection Name (colName)
+        #  - Key (sKey)
+        str2hash = self.libName + self.colName + self.sKey
+        return hashlib.md5(str2hash.encode()).hexdigest()
+
+
+class ColKeyVal():
     def __init__(self):
         self.srckey_id = ""
         self.sValue = ""

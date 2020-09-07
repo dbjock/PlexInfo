@@ -26,6 +26,90 @@ CREATE TABLE t_libkeys (
 );
 
 
+-- Table: t_colkeys
+CREATE TABLE t_colkeys (
+    ID       INTEGER PRIMARY KEY AUTOINCREMENT
+                     NOT NULL,
+    svrname           NOT NULL,
+    libname          NOT NULL,
+    colname         NOT NULL,
+    sKey             NOT NULL,
+    uKey             NOT NULL
+);
+-- Table: t_colvals
+CREATE TABLE t_colvals (
+    colkey_id  REFERENCES t_colkeys (ID) ON DELETE CASCADE
+                                         ON UPDATE CASCADE,
+    s_value
+);
+
+-- View: v_col_server1
+CREATE VIEW v_col_server1 AS
+    SELECT uKey,
+           libname,
+           colname,
+           sKey,
+           s_value
+      FROM t_colkeys AS k
+           JOIN
+           t_colvals AS v ON k.ID = v.colkey_id
+     WHERE upper(k.svrname) = 'SERVER1';
+
+-- View: v_col_server2
+CREATE VIEW v_col_server2 AS
+    SELECT uKey,
+           libname,
+           colname,
+           sKey,
+           s_value
+      FROM t_colkeys AS k
+           JOIN
+           t_colvals AS v ON k.ID = v.colkey_id
+     WHERE upper(k.svrname) = 'SERVER2';
+
+-- View: v_col_AllKeys
+CREATE VIEW v_col_AllKeys AS
+    SELECT uKey,
+           libname,
+           colname,
+           sKey
+      FROM t_colkeys AS k
+     GROUP BY uKey
+     ORDER BY colname;
+
+-- View: v_col_server1_2ALL
+CREATE VIEW v_col_server1_2ALL AS
+    SELECT v_col_AllKeys.uKey,
+           CASE WHEN v_col_server1.ukey IS NULL THEN '--Value missing--' WHEN s_value IS NULL THEN '--NULL VALUE--' ELSE s_value END AS server1_VAL
+      FROM v_col_AllKeys
+           LEFT JOIN
+           v_col_server1 ON v_col_AllKeys.uKey = v_col_server1.ukey;
+
+-- View: v_col_server2_2ALL
+CREATE VIEW v_col_server2_2ALL AS
+    SELECT v_col_AllKeys.uKey,
+           CASE WHEN v_col_server2.ukey IS NULL THEN '--Value missing--' WHEN s_value IS NULL THEN '--NULL VALUE--' ELSE s_value END AS server2_VAL
+      FROM v_col_AllKeys
+           LEFT JOIN
+           v_col_server2 ON v_col_AllKeys.uKey = v_col_server2.ukey;
+
+-- View: v_col_DiffResults
+CREATE VIEW v_col_DiffResults AS
+    SELECT libname,
+           colname,
+           skey,
+           server1_val,
+           server2_val,
+           CASE WHEN server1_val = server2_val THEN '' ELSE '***Different***' END AS isDiff
+      FROM v_col_AllKeys
+           LEFT JOIN
+           v_col_server1_2ALL ON v_col_ALLKeys.ukey = v_col_server1_2ALL.uKey
+           LEFT JOIN
+           v_col_server2_2ALL ON v_col_ALLKeys.ukey = v_col_server2_2ALL.uKey
+     ORDER BY libname,
+              colname,
+              skey;
+
 -- View: v_lib_AllKeys
 CREATE VIEW v_lib_AllKeys AS
     SELECT uKey,
