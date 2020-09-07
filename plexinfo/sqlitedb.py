@@ -158,7 +158,25 @@ class LocalDB():
                 f"Unexpected error executing sql: {sql}. Values are {theVals} Exception: {e}", exc_info=True)
             sys.exit(1)
 
-        logger.debug(f"Writting sql results to:  {oFile}")
+        logger.debug(f"Writing sql results to:  {oFile}")
+        with open(oFile, "w", newline='') as csv_file:
+            csv_writer = csv.writer(csv_file, dialect='excel')
+            csv_writer.writerow([i[0] for i in localc.description])
+            csv_writer.writerows(localc)
+
+    def exportColDiff(self, oFile):
+        logger.debug(f"oFile={oFile}")
+        sql = "select libname as library, colname, skey, server1_val, server2_val, isdiff FROM v_col_DiffResults"
+        try:
+            logger.debug(f"executing sql: {sql}")
+            localc = self.conn.cursor()
+            localc.execute(sql)
+        except Exception as e:
+            logger.critical(
+                f"Unexpected error executing sql: {sql}. Values are {theVals} Exception: {e}", exc_info=True)
+            sys.exit(1)
+
+        logger.debug(f"Writing sql results to:  {oFile}")
         with open(oFile, "w", newline='') as csv_file:
             csv_writer = csv.writer(csv_file, dialect='excel')
             csv_writer.writerow([i[0] for i in localc.description])
