@@ -217,12 +217,14 @@ def collection2Db(dbObj, movieLib, dbSvrNameTag, maxItems=0):
         c_valRec.sValue = c.collectionSort
         _collection2Rec(dbObj, c_keyRec, c_valRec)
 
-        childNum = 1
+        childList = []
         for c_child in c.children:
-            c_keyRec.sKey = f"CHILD-{childNum}"
-            c_valRec.sValue = c_child.title
-            _collection2Rec(dbObj, c_keyRec, c_valRec)
-            childNum += 1
+            childList.append(c_child.title)
+
+        childList.sort()
+        c_keyRec.sKey = f"children"
+        c_valRec.sValue = str(childList)
+        _collection2Rec(dbObj, c_keyRec, c_valRec)
 
         if itemCount == maxItems:
             break
