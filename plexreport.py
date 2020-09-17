@@ -9,6 +9,7 @@ from datetime import datetime
 # app specific modules
 from plexinfo import sqlitedb as mydb
 from plexinfo import plexutils as myutil
+from plexinfo import appconfig as appcfg
 from plexapi.myplex import MyPlexAccount
 
 logger = logging.getLogger("PlexReport")
@@ -21,10 +22,19 @@ VERSION = "1.BETA"
 
 
 def main(args):
-    plexRptData = Path.cwd() / 'Data'
-    plexScripts = Path.cwd() / 'Scripts'
+    plexRptData = Path.cwd() / 'data'
+    plexScripts = Path.cwd() / 'scripts'
     now = datetime.now()
     logger.debug(f"args is {args}")
+    logger.debug(f"Checking for config file")
+    cfgFile = Path(__file__).parent.absolute() / 'plexreport.conf'
+    if cfgFile.is_file():
+        logger.debug(f"loading config file: {cfgFile}")
+        appcfg.loadCfg(cfgFile)
+        logger.info(f"Config file loaded: {cfgFile}")
+        logger.debug(f"config section [main]: {appcfg.sec_main}")
+    else:
+        logger.debug(f"config file {cfgFile} not found")
 
     logger.debug(f"getpass from user {args.userName}")
     userPass = getpass.getpass(
@@ -65,13 +75,21 @@ def main(args):
     # Reporting on Collection differences
 
     print()
+    maxItems = int(appcfg.sec_main.get("collectionmax", 0))
+    if maxItems != 0:
+        msg = f"--OVERRIDE Max collections = {maxItems}"
+        print(msg)
+        logger.info(msg)
+
     print(f"{args.server1}: Exporting collection data from movie library section : {args.secName}")
     xmovLib = plexServer1.library.section(args.secName)
-    myutil.collection2Db(db1, xmovLib, dbSvrNameTag='server1')
+    myutil.collection2Db(
+        db1, xmovLib, dbSvrNameTag='server1', maxItems=maxItems)
 
     print(f"{args.server2}: Exporting collection data from movie library section : {args.secName}")
     xmovLib = plexServer2.library.section(args.secName)
-    myutil.collection2Db(db1, xmovLib, dbSvrNameTag='server2')
+    myutil.collection2Db(
+        db1, xmovLib, dbSvrNameTag='server2', maxItems=maxItems)
 
     csvFilename = f"{args.secName}_collections_{now.strftime('%Y-%m-%d-%H%M')}.csv"
     if args.dirSave == None:
@@ -84,13 +102,21 @@ def main(args):
     ############################################################
     # Reporting on movie differences
     print()
+    maxItems = int(appcfg.sec_main.get("moviemax", 0))
+    if maxItems != 0:
+        msg = f"--OVERRIDE Max movies = {maxItems}"
+        print(msg)
+        logger.info(msg)
+
     print(f"{args.server1}: Exporting movie data from movie library section : {args.secName}")
     xmovLib = plexServer1.library.section(args.secName)
-    myutil.movieLib2Db(db1, xmovLib, 'server1')
+    myutil.movieLib2Db(db1, xmovLib, 'server1',
+                       maxItems=maxItems)
 
     print(f"{args.server2}: Exporting movie data from movie library section : {args.secName}")
     xmovLib = plexServer2.library.section(args.secName)
-    myutil.movieLib2Db(db1, xmovLib, 'server2')
+    myutil.movieLib2Db(db1, xmovLib, 'server2',
+                       maxItems=maxItems)
 
     csvFilename = f"{args.secName}_library_{now.strftime('%Y-%m-%d-%H%M')}.csv"
     # Path.cwd
@@ -99,7 +125,7 @@ def main(args):
     else:
         libCSVFile = Path(args.dirSave) / csvFilename
 
-    print(f"Creating Movie Library Diff file :{libCSVFile}")
+    print(f"Creating Movie Library Diff file {libCSVFile}")
     db1.exportLibDiff(libCSVFile)
 
 
