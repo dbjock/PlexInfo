@@ -58,4 +58,4 @@ logs/
 *.ini
 *.csv
 *.db
-test*.py
+test*
