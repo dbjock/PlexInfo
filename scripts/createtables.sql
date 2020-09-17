@@ -121,24 +121,6 @@ CREATE VIEW v_lib_AllKeys AS
      ORDER BY filePath;
 
 
--- View: v_lib_DiffResults
-CREATE VIEW v_lib_DiffResults AS
-    SELECT library,
-           filePath,
-           skey,
-           server1_val,
-           server2_val,
-           CASE WHEN server1_val = server2_val THEN '' ELSE '***Different***' END AS isDiff
-      FROM v_lib_AllKeys
-           LEFT JOIN
-           v_lib_server1_2ALL ON v_lib_ALLKeys.ukey = v_lib_server1_2ALL.uKey
-           LEFT JOIN
-           v_lib_server2_2ALL ON v_lib_ALLKeys.ukey = v_lib_server2_2ALL.uKey
-     ORDER BY library,
-              filePath,
-              skey;
-
-
 -- View: v_lib_server1
 CREATE VIEW v_lib_server1 AS
     SELECT uKey,
@@ -181,7 +163,21 @@ CREATE VIEW v_lib_server2_2ALL AS
       FROM v_lib_AllKeys
            LEFT JOIN
            v_lib_server2 ON v_lib_AllKeys.uKey = v_lib_server2.ukey;
-
-
+-- View: v_lib_DiffResults
+CREATE VIEW v_lib_DiffResults AS
+    SELECT library,
+           filePath,
+           skey,
+           server1_val,
+           server2_val,
+           CASE WHEN server1_val = server2_val THEN '' ELSE '***Different***' END AS isDiff
+      FROM v_lib_AllKeys
+           LEFT JOIN
+           v_lib_server1_2ALL ON v_lib_ALLKeys.ukey = v_lib_server1_2ALL.uKey
+           LEFT JOIN
+           v_lib_server2_2ALL ON v_lib_ALLKeys.ukey = v_lib_server2_2ALL.uKey
+     ORDER BY library,
+              filePath,
+              skey;
 COMMIT TRANSACTION;
 PRAGMA foreign_keys = on;
