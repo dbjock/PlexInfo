@@ -7,3 +7,9 @@ This application reports, creates csv files, and will not change an data in any 
 
 - PlexAPI
 - YAML
+
+## Change Log
+
+x.xx Release
+
+## Usage
