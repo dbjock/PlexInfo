@@ -100,10 +100,11 @@ class LocalDB():
         Args:
             scriptPath (string): Path to script(s). Defaults to None.
         """
-        logger.debug(f"scriptPath={scriptPath}")
+        logger.info(f"scriptPath={scriptPath}")
         gtScripts = Path(scriptPath)
+        logger.info(f"Executing scripts to create database")
 
-        scriptFile = gtScripts / "createTables.sql"
+        scriptFile = gtScripts / "createtables.sql"
         logger.debug(f"Executing {scriptFile}")
         self._exeScriptFile(scriptFileName=f'{scriptFile}')
 
@@ -136,6 +137,7 @@ class LocalDB():
     def addLibValRec(self, keyRec):
         sql = "INSERT INTO t_libvals (srcKey_id, s_value) VALUES (:srcKey, :sValue)"
         theVals = {'srcKey': keyRec.srckey_id, 'sValue': keyRec.sValue}
+        logger.debug(f"adding movie library value record")
         return self._exeSQLInsert(sql, theVals)
 
     def exportLibDiff(self, oFile):
