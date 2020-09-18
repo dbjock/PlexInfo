@@ -59,4 +59,4 @@ logs/
 *.csv
 *.db
 test*
-.vscode/settings.json
+.vscode/
