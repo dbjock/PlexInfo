@@ -9,13 +9,16 @@ logger = logging.getLogger("sqlitedb")
 
 
 class LocalDB():
-    def __init__(self, dbLoc=":memory:"):
+    def __init__(self, dbLoc=None):
         """init the sqlite database class
 
         Args:
             dbLoc ([string], optional): database filename. Defaults to :memory:
         """
         self.conn = None
+        if dbLoc == None:
+            dbLoc = ":memory:"
+
         logger.debug(f"attempt open db {dbLoc}")
         try:
             self.conn = sqlite3.connect(
@@ -35,7 +38,6 @@ class LocalDB():
         c.execute("PRAGMA database_list;")
         xtmp = c.fetchall()
         logger.debug(f"PRAGMA database_list: {xtmp}")
-        logger.debug(f"dbfile: {xtmp[0][2]}")
 
     def _exeScriptFile(self, scriptFileName):
         """Executes a Script file. (internal use only)
