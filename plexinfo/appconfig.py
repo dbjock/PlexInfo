@@ -4,11 +4,15 @@ from configparser import ConfigParser
 # sec_main is the [main] section of the config file.
 sec_compare = dict()
 sec_db = dict()
+sec_server = dict()
 
 
 def loadCfg(cfgFile):
     cfgParser = ConfigParser()
     cfgParser.read(cfgFile)
+
+    for k, v in cfgParser.items('server'):
+        sec_server[k] = v
 
     for k, v in cfgParser.items('compare'):
         sec_compare[k] = v
