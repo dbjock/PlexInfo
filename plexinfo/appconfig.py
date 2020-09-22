@@ -11,11 +11,14 @@ def loadCfg(cfgFile):
     cfgParser = ConfigParser()
     cfgParser.read(cfgFile)
 
-    for k, v in cfgParser.items('server'):
-        sec_server[k] = v
+    if cfgParser.has_section('server'):
+        for k, v in cfgParser.items('server'):
+            sec_server[k] = v
 
-    for k, v in cfgParser.items('compare'):
-        sec_compare[k] = v
+    if cfgParser.has_section('compare'):
+        for k, v in cfgParser.items('compare'):
+            sec_compare[k] = v
 
-    for k, v in cfgParser.items('db'):
-        sec_db[k] = v
+    if cfgParser.has_section('db'):
+        for k, v in cfgParser.items('db'):
+            sec_db[k] = v
