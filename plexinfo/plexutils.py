@@ -93,6 +93,9 @@ def _uFilePath(plexLoc):
         example: /dir/dirA/dirB/my file name.mkv
     """
     p_theLoc = Path(plexLoc)
+    logger.debug(f"plexLoc = {plexLoc}")
+    logger.debug(f"p_theLoc = {p_theLoc}")
+    logger.debug(f"str(p_theLoc) = {str(p_theLoc)}")
     if p_theLoc.drive:
         offset = 1  # windows path
     else:

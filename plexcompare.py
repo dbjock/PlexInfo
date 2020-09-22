@@ -1,3 +1,4 @@
+import os
 import sys
 import getpass
 import logging.config
@@ -85,16 +86,21 @@ def main(args):
 
     logger.debug(f"args is {args}")
     logger.debug(f"Checking for config file")
-    cfgFile = Path(__file__).parent.absolute() / 'app.conf'
-    if cfgFile.is_file():
-        logger.debug(f"loading config file: {cfgFile}")
-        appcfg.loadCfg(cfgFile)
-        logger.info(f"Config file loaded: {cfgFile}")
-        logger.debug(f"  section [compare]: {appcfg.sec_compare}")
-        logger.debug(f"  section [db]: {appcfg.sec_db}")
-    else:
-        logger.debug(f"config file {cfgFile} not found")
+    if os.environ.get('PLEXCOMPARE_CONFIG_FILE') != None:
+        cfgFile = Path(os.environ.get('PLEXCOMPARE_CONFIG_FILE'))
 
+    if cfgFile != None:
+        if cfgFile.is_file():
+            logger.debug(f"loading config file: {cfgFile}")
+            appcfg.loadCfg(cfgFile)
+            logger.info(f"Config file loaded: {cfgFile}")
+            logger.debug(f"  section [compare]: {appcfg.sec_compare}")
+            logger.debug(f"  section [db]: {appcfg.sec_db}")
+            logger.debug(f"  section [server]: {appcfg.sec_server}")
+        else:
+            logger.debug(f"config file {cfgFile} not found")
+
+    quit()
     logger.debug(f"getpass from user {args.userName}")
     userPass = getpass.getpass(
         prompt=f"Enter {args.userName}'s Plex Password: ")
