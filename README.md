@@ -3,6 +3,9 @@ Table of contents
   - [Requirements](#requirements)
   - [Change Log](#change-log)
   - [Usage](#usage)
+  - [Configuration](#configuration)
+    - [Section [compare]](#section-compare)
+    - [Section [db]](#section-db)
   - [Commands](#commands)
     - [movie](#movie)
 # Plexcompare
@@ -34,6 +37,48 @@ Commands:
     movie         Get a comparison report for a movie library including it's
                   collections
 ```
+## Configuration
+The Plexcompare application will work fine with out a configuration file, however there are settings which you may want to use to further control plexcompare. The configuration file uses the INI file format. All configuration variables and sections in the file are optional.
+
+The configuration file location is set with the environment variable PLEXCOMPARE_CONFIG_FILE
+
+
+### Section [compare]
+This section is specific for settings to the plexcompare application. As stated before this section is optional, and all settings are optional.
+
+**collectionmax**
+
+Maximum number of collection objects that will be loaded for a movie library. Let's say you were testing with a movie library which has a large number of collections. This can limit the number of collections that will be loaded and compared instead of waiting for all to be loaded.
+
+Example below will limit the loading of only 5 movies l
+```
+[compare]
+collectionmax=5
+```
+
+**moviemax**
+
+Maximum number of video objects that will be loaded for a movie library. Example for using this is your testing are a very large movie library and want to limit the number of movies it will load. Set this to a number larger than 0 will then limit the number of movie/video objects that will be loaded for comparing.
+
+Example below will limit the loading of only 5 movies
+```
+[compare]
+moviemax=5
+```
+
+### Section [db]
+This section is specific for the datbase settings for all the plexinfo applications. As stated before this section is optional, and all settings are optional.
+
+**filename**
+
+By default the applications create the internal database in memory. This setting will override that and put the file on disk in the data directory local to the application.
+
+Example below will create a file `myExample.db` in the `./data/` directory. Note, this is a sqlite3 database.
+```
+[db]
+filename=myExample.db
+```
+
 ## Commands
 ### movie
 This is use to collect the movie and collection's from a specific movie library.
@@ -64,4 +109,11 @@ Comparison report for a Movie library including Collections:
   lib_name           Movie library name
   --OutPath DirPath  Directory path where csv files will be placed. Default is
                      current directory`
+```
+
+*Example*
+
+This will take movie library titled `NewReleases` and compare it's movies and collections on `UltraSrv1` and `OtherSrv`, using the plex account `BossMan`
+```
+python plexcompare.py -u BossMan --Movie NewReleases UltraSrv1 OtherSrv
 ```
