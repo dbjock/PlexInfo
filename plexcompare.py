@@ -86,8 +86,13 @@ def main(args):
 
     logger.debug(f"args is {args}")
     logger.debug(f"Checking for config file")
+
+    logger.debug(
+        f"PLEXCOMPARE_CONFIG_FILE {os.environ.get('PLEXCOMPARE_CONFIG_FILE')}")
     if os.environ.get('PLEXCOMPARE_CONFIG_FILE') != None:
         cfgFile = Path(os.environ.get('PLEXCOMPARE_CONFIG_FILE'))
+    else:
+        cfgFile = None
 
     if cfgFile != None:
         if cfgFile.is_file():
@@ -100,7 +105,6 @@ def main(args):
         else:
             logger.debug(f"config file {cfgFile} not found")
 
-    quit()
     logger.debug(f"getpass from user {args.userName}")
     userPass = getpass.getpass(
         prompt=f"Enter {args.userName}'s Plex Password: ")
