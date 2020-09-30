@@ -58,3 +58,4 @@ logs/
 *.ini
 *.csv
 *.db
+test*
