@@ -58,6 +58,3 @@ logs/
 *.ini
 *.csv
 *.db
-test*.py
-test*.bat
-test*.sh
