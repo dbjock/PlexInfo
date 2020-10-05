@@ -20,11 +20,11 @@ with open("log.conf", 'rt') as f:
     config = yaml.safe_load(f.read())
 
 logging.config.dictConfig(config)
-VERSION = "First BETA"
+VERSION = "0.1"
 
 
 def movieCompare(dbObj, svr1, svr2, args):
-    """[summary]
+    """Compares the movie library (and collections)
 
     Args:
         dbObj (databse obj): database object to save data to
@@ -81,16 +81,13 @@ def movieCompare(dbObj, svr1, svr2, args):
 
 
 def main(args):
-    plexRptData = Path.cwd() / 'data'
-    plexScripts = Path.cwd() / 'scripts'
-
     logger.debug(f"args is {args}")
     logger.debug(f"Checking for config file")
 
     logger.debug(
-        f"PLEXCOMPARE_CONFIG_FILE {os.environ.get('PLEXCOMPARE_CONFIG_FILE')}")
-    if os.environ.get('PLEXCOMPARE_CONFIG_FILE') != None:
-        cfgFile = Path(os.environ.get('PLEXCOMPARE_CONFIG_FILE'))
+        f"PLEXINFO_CONFIG_FILE {os.environ.get('PLEXINFO_CONFIG_FILE')}")
+    if os.environ.get('PLEXINFO_CONFIG_FILE') != None:
+        cfgFile = Path(os.environ.get('PLEXINFO_CONFIG_FILE'))
     else:
         cfgFile = None
 
@@ -99,12 +96,15 @@ def main(args):
             logger.debug(f"loading config file: {cfgFile}")
             appcfg.loadCfg(cfgFile)
             logger.info(f"Config file loaded: {cfgFile}")
-            logger.debug(f"  section [compare]: {appcfg.sec_compare}")
-            logger.debug(f"  section [db]: {appcfg.sec_db}")
-            logger.debug(f"  section [server]: {appcfg.sec_server}")
         else:
             logger.debug(f"config file {cfgFile} not found")
 
+    logger.debug(f"Config section [compare]: {appcfg.sec_compare}")
+    logger.debug(f"Config section [db]: {appcfg.sec_db}")
+    logger.debug(f"Config section [server]: {appcfg.sec_server}")
+    logger.debug(f"Config section [paths]: {appcfg.sec_paths}")
+
+    # quit()
     logger.debug(f"getpass from user {args.userName}")
     userPass = getpass.getpass(
         prompt=f"Enter {args.userName}'s Plex Password: ")
@@ -127,7 +127,7 @@ def main(args):
         dbFile = ":memory:"
         logger.debug(f"No dbfile config setting. dbFile = {dbFile}")
     else:
-        dbFile = plexRptData / appcfg.sec_db['filename']
+        dbFile = appcfg.sec_paths['data'] / appcfg.sec_db['filename']
         msg = f"  OVERRIDE: database saving to file: {dbFile}"
         logger.info(msg)
         print(msg)
@@ -136,7 +136,7 @@ def main(args):
             dbFile.unlink()
 
     db1 = mydb.LocalDB(dbLoc=str(dbFile))
-    db1.initDB(plexScripts)
+    db1.initDB(appcfg.sec_paths['scripts'])
     ############################################################
     # Connecting to Plex Servers
     msg = f"Connecting to servers"
@@ -156,21 +156,6 @@ def main(args):
     # Reporting Movie Libary section differences
     if args.movieLibName != None:
         movieCompare(db1, plexServer1, plexServer2, args)
-
-    quit()
-    ############################################################
-    # Reporting on movie differences
-    print()
-
-    csvFilename = f"{args.movieLibName}_library_{now.strftime('%Y-%m-%d-%H%M')}.csv"
-    # Path.cwd
-    if args.dirSave == None:
-        libCSVFile = Path.cwd() / csvFilename
-    else:
-        libCSVFile = Path(args.dirSave) / csvFilename
-
-    print(f"Creating Movie Library Diff file {libCSVFile}")
-    db1.exportLibDiff(libCSVFile)
 
 
 if __name__ == '__main__':

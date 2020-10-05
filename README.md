@@ -1,49 +1,32 @@
 Table of contents
+- [Requirements](#requirements)
+- [General Info](#general-info)
+- [Configuration](#configuration)
+  - [Section [compare] Options](#section-compare-options)
+    - [Section [db] Options](#section-db-options)
+    - [Section [paths] Options](#section-paths-options)
 - [Plexcompare](#plexcompare)
-  - [Requirements](#requirements)
   - [Change Log](#change-log)
   - [Usage](#usage)
-  - [Configuration](#configuration)
-    - [Section [compare]](#section-compare)
-    - [Section [db]](#section-db)
   - [Commands](#commands)
     - [movie](#movie)
-# Plexcompare
-Tool to compare libraries and collections from one plex server to another, and reporting the differences. Especially helpful when moving a plex server from a Windows to a Linux/MacOS since drive letters do not exist on one OS.
 
-The application will not make any changes to data Plex. It will create csv files, that excel, or any tool of your choice, can be used to extract the info you wish.
-
-## Requirements
+# Requirements
 Tested with python 3.6.8 on windows
 - PlexAPI
 - YAML
 
-## Change Log
-| Version  | Notes |
-| ------------- | ------------- |
-| .1| Initial release|
+# General Info
+The PlexInfo directory contains multiple python script utilities for Splunk. You can create a report, and compare libraries.
+# Configuration
 
+The configuration file is used by all python script utilities. This file is not required, as the scripts do have default values. Using the file can further control how the different scripts will work.
 
-## Usage
-```
-usage: plexreport.py [-h] -u plex_userid {movie} ...
+The configuration file location is set with the environment variable PLEXINFO_CONFIG_FILE, and the file uses the INI format.
+All configuration variables and sections in the file are optional.
 
-optional arguments:
-  -h, --help      show this help message and exit
-  -u plex_userid  The Plex User ID
+## Section [compare] Options
 
-Commands:
-  {movie}
-    movie         Get a comparison report for a movie library including it's
-                  collections
-```
-## Configuration
-The Plexcompare application will work fine with out a configuration file, however there are settings which you may want to use to further control plexcompare. The configuration file uses the INI file format. All configuration variables and sections in the file are optional.
-
-The configuration file location is set with the environment variable PLEXCOMPARE_CONFIG_FILE
-
-
-### Section [compare]
 This section is specific for settings to the plexcompare application. As stated before this section is optional, and all settings are optional.
 
 **collectionmax**
@@ -66,19 +49,58 @@ Example below will limit the loading of only 5 movies
 moviemax=5
 ```
 
-### Section [db]
-This section is specific for the datbase settings for all the plexinfo applications. As stated before this section is optional, and all settings are optional.
+### Section [db] Options
+
+This section is specific for the database settings for all the plexinfo applications. As stated before this section is optional, and all settings are optional.
 
 **filename**
 
-By default the applications create the internal database in memory. This setting will override that and put the file on disk in the data directory local to the application.
+By default the applications creates an internal database in memory. This setting will override that and put the file on disk in the data directory local to the application.
 
-Example below will create a file `myExample.db` in the `./data/` directory. Note, this is a sqlite3 database.
+Example below will create a file `myExample.db` in the `./data/` directory, unless changed in the `[paths]` section.
 ```
 [db]
 filename=myExample.db
 ```
+If you want the database to be placed into a different directory, then provide the full path to it, or see the `[paths]` section.
 
+### Section [paths] Options
+
+By default the ./data, and ./scripts directories are used by the various scripts and these can be overriden.
+
+**data**
+
+Using this setting will have the application use a different path for files it would normally put in the `./data` directory.
+
+**scripts**
+
+Using this setting, the scripts can be changed from `./scripts`, to a different path. This is not recommend unless you know what you are doing, since there various script files are used for various things.
+
+# Plexcompare
+
+Tool to compare libraries and collections from one plex server to another, and reporting the differences. Especially helpful when moving a plex server from a Windows to a Linux/MacOS since drive letters do not exist on one OS.
+
+The application will not make any changes to data Plex. It will create csv files, that excel, or any tool of your choice, can be used to extract the info you wish.
+
+## Change Log
+| Version  | Notes |
+| ------------- | ------------- |
+| .1| Initial release|
+
+
+## Usage
+```
+usage: plexreport.py [-h] -u plex_userid {movie} ...
+
+optional arguments:
+  -h, --help      show this help message and exit
+  -u plex_userid  The Plex User ID
+
+Commands:
+  {movie}
+    movie         Get a comparison report for a movie library including it's
+                  collections
+```
 ## Commands
 ### movie
 This is use to collect the movie and collection's from a specific movie library.
