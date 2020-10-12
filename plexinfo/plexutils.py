@@ -8,6 +8,37 @@ from plexinfo import sqlitedb as mydb
 logger = logging.getLogger("PlexUtils")
 
 
+def progress(count, total, status=''):
+    # https://gist.github.com/vladignatyev/06860ec2040cb497f0f3
+    # The MIT License (MIT)
+    # Copyright (c) 2016 Vladimir Ignatev
+    #
+    # Permission is hereby granted, free of charge, to any person obtaining
+    # a copy of this software and associated documentation files (the "Software"),
+    # to deal in the Software without restriction, including without limitation
+    # the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    # and/or sell copies of the Software, and to permit persons to whom the Software
+    # is furnished to do so, subject to the following conditions:
+    #
+    # The above copyright notice and this permission notice shall be included
+    # in all copies or substantial portions of the Software.
+    #
+    # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+    # INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+    # PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+    # FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+    # OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+    # OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+    bar_len = 40
+    filled_len = int(round(bar_len * count / float(total)))
+
+    percents = round(100.0 * count / float(total), 1)
+    bar = '=' * filled_len + '-' * (bar_len - filled_len)
+
+    sys.stdout.write('[%s] %s%s ...%s\r' % (bar, percents, '%', status))
+    sys.stdout.flush()  # As suggested by Rom Ruben (see: http://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console/27871113#comment50529068_27871113)
+
+
 def connectPlexServer(plexAcct, svrName):
     """Will connect to the server
     plexAcct : MyPlexAccount object
@@ -153,16 +184,22 @@ def movieLib2Db(dbObj, movieLib, svrName, maxItems=0):
         dbObj (sqlitedb.LocalDB object): database object to update
         movieLib (plexapi.library.MovieSection): Movie lib section to export
         svrName (string): Name of the plex server
-        maxItems (int, optional): max records to write. Defaults to 0.
+        maxItems (int, optional): max records to write. Defaults to 0 which means all
     """
     # Get all media from the movie library
-    logger.info(f"Getting all movies from the movie library: {movieLib.title}")
+    logger.info(
+        f"Extracting from server {svrName} media entries for movie library: {movieLib.title}")
     mList = movieLib.all()
-    itemCount = 0
-    if maxItems > 0:
-        logger.warning(f"Max Movies allowed to be exported: {maxItems}")
+    # log and inform user not all movies will be extracted.
+    if maxItems > 0 and len(mList) > maxItems:
+        msg = f"Only {maxItems} of {len(mList)} will be exported"
+    else:
+        msg = f"Exporting {len(mList)} items"
 
+    logger.info(msg)
+    print(f"  {msg}")
     logger.debug("updating database")
+    itemCount = 0
     for m in mList:
         itemCount += 1
         # The Key part of the key/value pair
@@ -190,21 +227,45 @@ def movieLib2Db(dbObj, movieLib, svrName, maxItems=0):
         _movie2Rec(dbObj, svrName=svrName, uFilePath=_uFilePath(
             m.locations[0]), libName=movieLib.title, sKey="Media", keyVal=str(m.media))
 
+        # Every 20 items write to log
         if itemCount % 20 == 0:
-            logging.info(f"Movies exported to db: {itemCount}")
+            logger.info(f"Movies exported to db: {itemCount}")
+
+        progress(itemCount, len(mList), "Movies Exported")
 
         if itemCount == maxItems:
             break
 
+    logger.info(f"Movie media items exported to database: {itemCount}")
     logger.debug("database update done")
+    print("")
 
 
 def collection2Db(dbObj, movieLib, dbSvrNameTag, maxItems=0):
-    pass
-    mCollections = movieLib.collection()
-    # Iterate thru collections (mCollections) in the Movie Library
-    itemCount = 1
-    for c in mCollections:
+    """Export collections from a movie lib into the database
+
+    Args:
+        dbObj (sqlitedb.LocalDB object): database object to update
+        movieLib (plexapi.library.MovieSection): Movie lib section to export
+        dbSvrNameTag (string): Name of the plex server
+        maxItems (int, optional): max records to write. Defaults to 0 which means all
+    """
+    logger.info(
+        f"Extracting from server {dbSvrNameTag} collections from movie library: {movieLib.title}")
+    mList = movieLib.collection()
+    # log and inform user not all collection ites will be extracted
+    if maxItems > 0 and len(mList) > maxItems:
+        msg = f"Only {maxItems} of {len(mList)} collections will be exported"
+    else:
+        msg = f"Exporting {len(mList)} collections"
+    logger.info(msg)
+    print(f"  {msg}")
+    logger.debug("Collection database update starting")
+
+    # Iterate thru collections (mList) in the Movie Library
+    itemCount = 0
+    for c in mList:
+        itemCount += 1
         c_keyRec = mydb.ColKey()
         c_valRec = mydb.ColKeyVal()
 
@@ -229,10 +290,18 @@ def collection2Db(dbObj, movieLib, dbSvrNameTag, maxItems=0):
         c_valRec.sValue = str(childList)
         _collection2Rec(dbObj, c_keyRec, c_valRec)
 
+        # every 5 items update log
+        if itemCount % 5 == 0:
+            logger.info(f"Collections exported to db: {itemCount}")
+
+        progress(itemCount, len(mList), "Collections Exported")
+
         if itemCount == maxItems:
             break
 
-        itemCount += 1
+    print("")
+    logger.info(f"Collections exported to database: {itemCount}")
+    logger.debug('Collection extract to database completed')
 
 
 if __name__ == '__main__':
