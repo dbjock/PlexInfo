@@ -3,8 +3,8 @@ Table of contents
 - [General Info](#general-info)
 - [Configuration](#configuration)
   - [Section [compare] Options](#section-compare-options)
-    - [Section [db] Options](#section-db-options)
-    - [Section [paths] Options](#section-paths-options)
+  - [Section [db] Options](#section-db-options)
+  - [Section [paths] Options](#section-paths-options)
 - [Plexcompare](#plexcompare)
   - [Change Log](#change-log)
   - [Usage](#usage)
@@ -49,7 +49,7 @@ Example below will limit the loading of only 5 movies
 moviemax=5
 ```
 
-### Section [db] Options
+## Section [db] Options
 
 This section is specific for the database settings for all the plexinfo applications. As stated before this section is optional, and all settings are optional.
 
@@ -64,7 +64,7 @@ filename=myExample.db
 ```
 If you want the database to be placed into a different directory, then provide the full path to it, or see the `[paths]` section.
 
-### Section [paths] Options
+## Section [paths] Options
 
 By default the ./data, and ./scripts directories are used by the various scripts and these can be overriden.
 
