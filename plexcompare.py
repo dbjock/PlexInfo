@@ -20,7 +20,7 @@ with open("log.conf", 'rt') as f:
     config = yaml.safe_load(f.read())
 
 logging.config.dictConfig(config)
-VERSION = ".2.ALPHA"
+VERSION = "1.1.ALPHA"
 
 
 def movieCompare(dbObj, svr1, svr2, args):
@@ -108,6 +108,7 @@ def main(args):
     # Output to console summary of what is going to be done
     print("=" * 80)
     print(f"  ---- Compare Movie Library ----")
+    print(f"  PlexCompare Ver-> {VERSION}")
     print(f"  Library --------> {args.movieLibName}")
     print(f"  User -----------> {args.userName}")
     print(f"  Server 1 -------> {args.server1}")
@@ -165,6 +166,11 @@ def main(args):
     # Reporting Movie Libary section differences
     if args.movieLibName != None:
         movieCompare(db1, plexServer1, plexServer2, args)
+
+    ############################################################
+    # Completed the processing
+    print("=" * 80)
+    logger.info("========= End ===========")
 
 
 if __name__ == '__main__':
