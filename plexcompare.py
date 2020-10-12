@@ -20,7 +20,7 @@ with open("log.conf", 'rt') as f:
     config = yaml.safe_load(f.read())
 
 logging.config.dictConfig(config)
-VERSION = "0.1"
+VERSION = ".2.ALPHA"
 
 
 def movieCompare(dbObj, svr1, svr2, args):
@@ -42,13 +42,13 @@ def movieCompare(dbObj, svr1, svr2, args):
             plexSvrName = args.server2
             xmovLib = svr2.library.section(args.movieLibName)
 
-        msg = f"{plexSvrName}: Exporting collection data from movie library : {args.movieLibName}"
+        msg = f"  {plexSvrName}: Exporting collection data from movie library : {args.movieLibName}"
         print(msg)
         logger.info(msg)
         myutil.collection2Db(
             dbObj, xmovLib, dbSvrNameTag=svrNameTag, maxItems=int(appcfg.sec_compare.get("collectionmax", 0)))
 
-        msg = f"{plexSvrName}: Exporting movie data from movie library : {args.movieLibName}"
+        msg = f"  {plexSvrName}: Exporting movie data from movie library : {args.movieLibName}"
         print(msg)
         logger.info(msg)
         myutil.movieLib2Db(dbObj, xmovLib, svrNameTag,
@@ -56,28 +56,29 @@ def movieCompare(dbObj, svr1, svr2, args):
 
     # Create Collection diff csv file
     csvFilename = f"{args.movieLibName}_collections_{now.strftime('%Y-%m-%d-%H%M')}.csv"
-    logger.debug(f"exporting to file: {csvFilename}")
+    logger.debug(f"collection diff export file: {csvFilename}")
     if args.dirSave == None:
-        collectionCSVFile = Path.cwd() / csvFilename
+        csvExportFile = Path.cwd() / csvFilename
     else:
-        collectionCSVFile = Path(args.dirSave) / csvFilename
+        csvExportFile = Path(args.dirSave) / csvFilename
 
-    logger.debug(f"exporting to file: {collectionCSVFile}")
-    msg = f"Creating Collection Diff file {collectionCSVFile}"
-    print(msg)
+    msg = f"  Creating Collection Diff file - -> {csvExportFile}"
     logger.info(msg)
-    dbObj.exportColDiff(collectionCSVFile)
+    print(msg)
+    dbObj.exportColDiff(csvExportFile)
 
     # Create Movie diff csv file
     csvFilename = f"{args.movieLibName}_library_{now.strftime('%Y-%m-%d-%H%M')}.csv"
-    # Path.cwd
+    logger.debug(f"movie diff export file: {csvFilename}")
     if args.dirSave == None:
-        libCSVFile = Path.cwd() / csvFilename
+        csvExportFile = Path.cwd() / csvFilename
     else:
-        libCSVFile = Path(args.dirSave) / csvFilename
+        csvExportFile = Path(args.dirSave) / csvFilename
 
-    print(f"Creating Movie Library Diff file {libCSVFile}")
-    dbObj.exportLibDiff(libCSVFile)
+    msg = f"  Creating Movie Diff file --------> {csvExportFile}"
+    logger.info(msg)
+    print(msg)
+    dbObj.exportLibDiff(csvExportFile)
 
 
 def main(args):
@@ -85,7 +86,7 @@ def main(args):
     logger.debug(f"Checking for config file")
 
     logger.debug(
-        f"PLEXINFO_CONFIG_FILE {os.environ.get('PLEXINFO_CONFIG_FILE')}")
+        f"PLEXINFO_CONFIG_FILE is set to: {os.environ.get('PLEXINFO_CONFIG_FILE')}")
     if os.environ.get('PLEXINFO_CONFIG_FILE') != None:
         cfgFile = Path(os.environ.get('PLEXINFO_CONFIG_FILE'))
     else:
@@ -104,13 +105,21 @@ def main(args):
     logger.debug(f"Config section [server]: {appcfg.sec_server}")
     logger.debug(f"Config section [paths]: {appcfg.sec_paths}")
 
-    # quit()
+    # Output to console summary of what is going to be done
+    print("=" * 80)
+    print(f"  ---- Compare Movie Library ----")
+    print(f"  Library --------> {args.movieLibName}")
+    print(f"  User -----------> {args.userName}")
+    print(f"  Server 1 -------> {args.server1}")
+    print(f"  Server 2 -------> {args.server2}")
+    print(f"  Output Dir -----> {args.dirSave}")
     logger.debug(f"getpass from user {args.userName}")
     userPass = getpass.getpass(
-        prompt=f"Enter {args.userName}'s Plex Password: ")
-    msg = f"Authenticating {args.userName}"
+        prompt=f"> Enter {args.userName}'s Plex Password: ")
+    msg = f"  Authenticating -> {args.userName}"
     print(msg)
     logger.info(f"{msg}")
+
     try:
         plexAcct = MyPlexAccount(args.userName, userPass)
     except Exception as err:
@@ -120,7 +129,7 @@ def main(args):
     logger.info(f"username: {args.userName} authenticated.")
     ###################################################
     # Setting up database
-    msg = f"Setting up internal database"
+    msg = f"  Setting up internal database"
     print(msg)
     logger.info(msg)
     if appcfg.sec_db.get('filename') == None:
@@ -139,7 +148,7 @@ def main(args):
     db1.initDB(appcfg.sec_paths['scripts'])
     ############################################################
     # Connecting to Plex Servers
-    msg = f"Connecting to servers"
+    msg = f"  Connecting to servers {args.server1} and {args.server2}"
     print(msg)
     logger.info(f"{msg}")
     plexServer1 = myutil.connectPlexServer(plexAcct, args.server1)
