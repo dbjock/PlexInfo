@@ -85,6 +85,7 @@ The application will not make any changes to data Plex. It will create csv files
 ## Change Log
 | Version  | Notes |
 | ------------- | ------------- |
+|1.1| Console output enhancements.|
 | .1| Initial release|
 
 
